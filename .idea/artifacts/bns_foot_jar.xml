@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="bns_foot:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/bns_foot_jar</output-path>
+    <root id="archive" name="bns_foot.jar">
+      <element id="module-output" name="bns_foot" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../tool/repository/com/alibaba/fastjson/1.2.47/fastjson-1.2.47.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
