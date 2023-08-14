@@ -184,16 +184,16 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     }
 
     private void qieXian() {
+        robot.keyPress(KeyEvent.VK_ALT);
+        robot.delay(1150);
         robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY());
         robot.delay(150);
-        robot.keyPress(KeyEvent.VK_ALT);
-        robot.delay(150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
-        robot.delay(50);
+        robot.delay(150);
         robot.keyRelease(KeyEvent.BUTTON1_MASK);
         robot.delay(150);
         System.out.println("切2线");
-        robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY() + 35);
+        robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY() + 15);
         robot.delay(150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
         robot.delay(50);
