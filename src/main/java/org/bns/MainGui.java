@@ -23,20 +23,85 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private JComboBox<String> comboBox;
     private BufferedImage oldShot;
 
+    private  PickPOJO quse =new PickPOJO("当前取色");
+
     public static Map<String, PickPOJO> buttonMap = new HashMap<String, PickPOJO>() {{
-        put("quSe", new PickPOJO("当前取色"));
         put("xueYin", new PickPOJO("血隐"));
         put("xueXian", new PickPOJO("血现"));
         put("shiQu", new PickPOJO("拾取"));
-        put("qieXian", new PickPOJO("切线"));
         put("jiantou", new PickPOJO("箭头"));
     }};
+
+
+
     Robot robot = new Robot();
     FileDialog openDia, saveDia;//定义“打开、保存”对话框
     Point mousePoint;
     Color pixel = new Color(0, 0, 0);
     JButton JRun;
     Thread bb;
+    public MainGui() throws AWTException {
+        frame = new JFrame("Bns");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(250, 350);
+        // 创建面板
+        panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+
+        openDia = new FileDialog(this, "打开", FileDialog.LOAD);
+        saveDia = new FileDialog(this, "保存", FileDialog.SAVE);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(-10, 5, 30, 5);
+
+        constraints.gridy = 0;
+        constraints.gridx = 0;
+        panel.add(quse.getjCol(), constraints);
+        constraints.gridy = 0;
+        constraints.gridx = 1;
+        panel.add(quse.getXy(), constraints);
+        constraints.gridy = 0;
+        constraints.gridx = 2;
+        panel.add( new JLabel("当前取色"), constraints);
+        quse.getButton().addKeyListener(this);
+        quse.getButton().addActionListener(this);
+
+
+        constraints.insets = new Insets(5, 5, 5, 5);
+
+
+
+        int i=1;
+        for (String key : buttonMap.keySet()) {
+            constraints.gridy = i;
+            constraints.gridx = 0;
+            panel.add(buttonMap.get(key).getjCol(), constraints);
+            constraints.gridy = i;
+            constraints.gridx = 1;
+            panel.add(buttonMap.get(key).getXy(), constraints);
+            constraints.gridy = i;
+            constraints.gridx = 2;
+            panel.add(buttonMap.get(key).getButton(), constraints);
+            buttonMap.get(key).getButton().addKeyListener(this);
+            buttonMap.get(key).getButton().addActionListener(this);
+
+            i++;
+        }
+        String[] options = {"Option 1", "Option 2", "Option 3"};
+        comboBox = new JComboBox(options);
+        constraints.gridy = 7;
+        constraints.gridx = 0;
+        constraints.gridwidth = 2;
+        panel.add(comboBox, constraints);
+        frame.getContentPane().add(panel);
+        // 设置主窗口可见
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setMenuBar();
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -71,14 +136,14 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         for (String key : buttonMap.keySet()) {
             if (e.getSource() == buttonMap.get(key).getButton()) {
                 PickPOJO p = buttonMap.get(key);
-                if (buttonMap.get("quSe").getX() == -1) {
+                if (quse.getX() == -1) {
                     JOptionPane.showMessageDialog(null, "此功能:" + p.getButton().getText(), "提示", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    p.setX(buttonMap.get("quSe").getX()) ;
-                    p.setY(buttonMap.get("quSe").getY())  ;
-                    p.setR(buttonMap.get("quSe").getR());
-                    p.setG(buttonMap.get("quSe").getG())  ;
-                    p.setB( buttonMap.get("quSe").getB()) ;
+                    p.setX(quse.getX()) ;
+                    p.setY(quse.getY())  ;
+                    p.setR(quse.getR());
+                    p.setG(quse.getG())  ;
+                    p.setB( quse.getB()) ;
                     p.getXy().setText("(" + p.getX() + "," + p.getY() + ")");
                     p.getjCol().setForeground(new Color(p.getR(), p.getG(), p.getB()));
                 }
@@ -294,13 +359,13 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 mousePoint = MouseInfo.getPointerInfo().getLocation();
 
                 pixel = robot.getPixelColor(mousePoint.x, mousePoint.y);
-                buttonMap.get("quSe").setX ( mousePoint.x);
-                buttonMap.get("quSe").setY ( mousePoint.y);
-                buttonMap.get("quSe").setR ( pixel.getRed());
-                buttonMap.get("quSe").setG ( pixel.getGreen());
-                buttonMap.get("quSe").setB (pixel.getBlue());
-                buttonMap.get("quSe").getXy().setText("(" + buttonMap.get("quSe").getX() + "," + buttonMap.get("quSe").getY() + ")");
-                buttonMap.get("quSe").getjCol().setForeground(new Color(buttonMap.get("quSe").getR(), buttonMap.get("quSe").getG(), buttonMap.get("quSe").getB()));
+                quse.setX ( mousePoint.x);
+                quse.setY ( mousePoint.y);
+                quse.setR ( pixel.getRed());
+                quse.setG ( pixel.getGreen());
+                quse.setB (pixel.getBlue());
+                quse.getXy().setText("(" + quse.getX() + "," + quse.getY() + ")");
+                quse.getjCol().setForeground(new Color(quse.getR(), quse.getG(), quse.getB()));
             } catch (Exception ext) {
                 ext.printStackTrace();
             }
@@ -317,51 +382,6 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         MainGui mainGui = new MainGui();
     }
 
-    public MainGui() throws AWTException {
-        frame = new JFrame("My GUI");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(250, 350);
-        // 创建面板
-        panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-
-
-        openDia = new FileDialog(this, "打开", FileDialog.LOAD);
-        saveDia = new FileDialog(this, "保存", FileDialog.SAVE);
-
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.anchor = GridBagConstraints.WEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.insets = new Insets(5, 5, 5, 5);
-        int i=0;
-        for (String key : buttonMap.keySet()) {
-            constraints.gridy = i;
-            constraints.gridx = 0;
-            panel.add(buttonMap.get(key).getjCol(), constraints);
-            constraints.gridy = i;
-            constraints.gridx = 1;
-            panel.add(buttonMap.get(key).getXy(), constraints);
-            constraints.gridy = i;
-            constraints.gridx = 2;
-            panel.add(buttonMap.get(key).getButton(), constraints);
-            buttonMap.get(key).getButton().addKeyListener(this);
-            buttonMap.get(key).getButton().addActionListener(this);
-
-            i++;
-        }
-        String[] options = {"Option 1", "Option 2", "Option 3"};
-        comboBox = new JComboBox(options);
-        constraints.gridy = 7;
-        constraints.gridx = 0;
-        constraints.gridwidth = 2;
-        panel.add(comboBox, constraints);
-        frame.getContentPane().add(panel);
-        // 设置主窗口可见
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setMenuBar();
-    }
 
     public void setMenuBar()
 
