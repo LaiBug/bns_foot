@@ -2,6 +2,8 @@ package org.bns;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import org.bns.pojo.CustomOutputStream;
+import org.bns.pojo.LogViewer;
 import org.bns.pojo.PickPOJO;
 
 import javax.imageio.ImageIO;
@@ -21,7 +23,6 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private JFrame frame;
     private JPanel panel;
     private JComboBox<String> comboBox;
-    private BufferedImage oldShot;
 
     private  PickPOJO quse =new PickPOJO("当前取色");
 
@@ -35,6 +36,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
 
 
     Robot robot = new Robot();
+
+    JTextArea logTextArea=new JTextArea(200,300);
     FileDialog openDia, saveDia;//定义“打开、保存”对话框
     Point mousePoint;
     Color pixel = new Color(0, 0, 0);
@@ -43,7 +46,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     public MainGui() throws AWTException {
         frame = new JFrame("Bns");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(250, 350);
+        frame.setSize(550, 350);
         // 创建面板
         panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -96,6 +99,23 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         constraints.gridx = 0;
         constraints.gridwidth = 2;
         panel.add(comboBox, constraints);
+
+
+
+        logTextArea.addKeyListener(this);
+
+        logTextArea.setEditable(false);
+        PrintStream printStream = new PrintStream(new CustomOutputStream(logTextArea));
+        System.setOut(printStream);
+        System.setErr(printStream);
+        JScrollPane scrollPane = new JScrollPane(logTextArea);
+//        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setPreferredSize(new Dimension(300, 200)); // 设置宽度和高度
+        constraints.gridy = 0;
+        constraints.gridx = 4;
+        constraints.gridheight=7;
+        panel.add(scrollPane, constraints);
+
         frame.getContentPane().add(panel);
         // 设置主窗口可见
         frame.setVisible(true);
@@ -357,7 +377,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         if (e.getKeyCode() == 18) {
             try {
                 mousePoint = MouseInfo.getPointerInfo().getLocation();
-
+                System.out.println("222");
                 pixel = robot.getPixelColor(mousePoint.x, mousePoint.y);
                 quse.setX ( mousePoint.x);
                 quse.setY ( mousePoint.y);
