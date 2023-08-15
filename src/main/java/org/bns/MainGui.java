@@ -2,11 +2,8 @@ package org.bns;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import org.bns.pojo.CustomOutputStream;
-import org.bns.pojo.LogViewer;
 import org.bns.pojo.PickPOJO;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,36 +14,47 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimerTask;
+import java.util.Timer;
+
 
 public class MainGui extends JFrame  implements ActionListener, KeyListener,Runnable {
-    public static boolean run = false;
+
+
+    public static boolean run=false;
+    public static MainGui mainGui;
     private JFrame frame;
     private JPanel panel;
     private JComboBox<String> comboBox;
 
-    private  PickPOJO quse =new PickPOJO("当前取色");
+    private static Timer timer;
+
+    private static PickPOJO quse =new PickPOJO("当前取色");
 
     public static Map<String, PickPOJO> buttonMap = new HashMap<String, PickPOJO>() {{
         put("xueYin", new PickPOJO("血隐"));
         put("xueXian", new PickPOJO("血现"));
         put("shiQu", new PickPOJO("拾取"));
         put("jiantou", new PickPOJO("箭头"));
+        put("qieXian", new PickPOJO("切线"));
     }};
-
-
 
     Robot robot = new Robot();
 
-    JTextArea logTextArea=new JTextArea(200,300);
+    static  JTextArea logTextArea ;
+    static JScrollPane scrollPane;
     FileDialog openDia, saveDia;//定义“打开、保存”对话框
     Point mousePoint;
     Color pixel = new Color(0, 0, 0);
     JButton JRun;
-    Thread bb;
+
     public MainGui() throws AWTException {
+
+
+
         frame = new JFrame("Bns");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(550, 350);
+        frame.setSize(550, 400);
         // 创建面板
         panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -75,8 +83,6 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
 
         constraints.insets = new Insets(5, 5, 5, 5);
 
-
-
         int i=1;
         for (String key : buttonMap.keySet()) {
             constraints.gridy = i;
@@ -95,54 +101,72 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         }
         String[] options = {"Option 1", "Option 2", "Option 3"};
         comboBox = new JComboBox(options);
-        constraints.gridy = 7;
+        constraints.gridy = i;
         constraints.gridx = 0;
         constraints.gridwidth = 2;
         panel.add(comboBox, constraints);
-
-
-
-        logTextArea.addKeyListener(this);
-
+        logTextArea=new JTextArea(10,27);
+        logTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         logTextArea.setEditable(false);
-        PrintStream printStream = new PrintStream(new CustomOutputStream(logTextArea));
-        System.setOut(printStream);
-        System.setErr(printStream);
-        JScrollPane scrollPane = new JScrollPane(logTextArea);
-//        add(scrollPane, BorderLayout.CENTER);
-        scrollPane.setPreferredSize(new Dimension(300, 200)); // 设置宽度和高度
+
+        scrollPane = new JScrollPane(logTextArea);
+
+//        scrollPane.setPreferredSize(new Dimension(300, 200)); // 设置宽度和高度
         constraints.gridy = 0;
         constraints.gridx = 4;
-        constraints.gridheight=7;
+        constraints.gridheight=i+1;
         panel.add(scrollPane, constraints);
+        logTextArea.addKeyListener(this);
+//        logTextArea.addAncestorListener(this);
+        scrollPane.addKeyListener(this);
+
+        JRun=new JButton("运行");
+        JRun.addActionListener(this);
+        JRun.addKeyListener(this);
+        constraints.gridy = i+1;
+        constraints.gridx = 0;
+        constraints.gridwidth=7;
+        panel.add(JRun, constraints);
 
         frame.getContentPane().add(panel);
+        setMenuBar();
+
         // 设置主窗口可见
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setMenuBar();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == JRun) {
-            if (!run) {
-                JRun.setText("运行中");
+            if (JRun.getText().equals("运行")) {
                 try {
-                    Thread.sleep(1000);
-                    MainGui aa = new MainGui();
-                    bb = new Thread(aa);
-                    bb.start();
-                    run = true;
-                } catch (AWTException ex) {
-                    throw new RuntimeException(ex);
-                } catch (InterruptedException ex) {
+
+                    JRun.setText("运行中");
+                    run=true;
+                    timer = new Timer();
+                    TimerTask task = new TimerTask() {
+                        public void run() {
+                            // 执行定时任务的逻辑
+                            mainGui.run();
+                        }
+                    };
+                    // 启动定时器
+                    timer.scheduleAtFixedRate(task, 2000,2000);
+                    BnsUtils.logPrint(logTextArea,"开始运行");
+                } catch (Exception ex) {
+                    run=false;
+                    robot.delay(2000);
+                    BnsUtils.logPrint(logTextArea,"运行错误，已停止");
+                    timer.cancel();
                     throw new RuntimeException(ex);
                 }
-
             } else {
-                run = false;
-                bb.stop();
+                run=false;
+                timer.cancel();
+                robot.delay(2000);
+
+                BnsUtils.logPrint(logTextArea,"已停止运行");
                 JRun.setText("运行");
                 JOptionPane.showMessageDialog(null, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -174,7 +198,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private void saveTxt() {
         saveDia.setVisible(true);
         String dirpath = saveDia.getDirectory();
-        String fileName = saveDia.getFile() + ".txt";
+        String fileName = saveDia.getFile() ;
 
         if (dirpath == null || fileName == null) {
             return;
@@ -188,11 +212,11 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             }
             String text = JSONObject.toJSONString(aa);
 
-            System.out.println("内容：" + text);
+            BnsUtils.logPrint(logTextArea,"内容：" + text);
             bufw.write(text);
             bufw.close();
         } catch (Exception ex) {
-            System.out.println("错：" + ex.getMessage());
+            BnsUtils.logPrint(logTextArea,"错：" + ex.getMessage());
             ex.printStackTrace();
             ex.getMessage();
         }
@@ -212,22 +236,25 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             String line = "";
             String s2 = "";
             while ((line = bufr.readLine()) != null) {
-                System.out.println(line);
+                BnsUtils.logPrint(logTextArea,line);
                 s2 += line;
             }
             JSONObject jsonObject = JSON.parseObject(s2);
             for (String key : buttonMap.keySet()) {
-                String str = jsonObject.get(key).toString();
-                String[] sites = str.split(",");
-                if (sites[0] != null && !sites[0].equals("null")) {
-                    buttonMap.get(key).setX(Integer.valueOf(sites[0]));
-                    buttonMap.get(key).setY(Integer.valueOf(sites[1]));
-                    buttonMap.get(key).setR(Integer.valueOf(sites[2]));
-                    buttonMap.get(key).setG(Integer.valueOf(sites[3]));
-                    buttonMap.get(key).setB(Integer.valueOf(sites[4]));
-                    buttonMap.get(key).getXy().setText("(" + sites[0] + "," + sites[1] + ")");
-                    buttonMap.get(key).getjCol().setForeground(new Color(buttonMap.get(key).getR(), buttonMap.get(key).getG(), buttonMap.get(key).getB()));
+                if(jsonObject.get(key)!=null){
+                    String str = jsonObject.get(key).toString();
+                    String[] sites = str.split(",");
+                    if (sites[0] != null && !sites[0].equals("null")) {
+                        buttonMap.get(key).setX(Integer.valueOf(sites[0]));
+                        buttonMap.get(key).setY(Integer.valueOf(sites[1]));
+                        buttonMap.get(key).setR(Integer.valueOf(sites[2]));
+                        buttonMap.get(key).setG(Integer.valueOf(sites[3]));
+                        buttonMap.get(key).setB(Integer.valueOf(sites[4]));
+                        buttonMap.get(key).getXy().setText("(" + sites[0] + "," + sites[1] + ")");
+                        buttonMap.get(key).getjCol().setForeground(new Color(buttonMap.get(key).getR(), buttonMap.get(key).getG(), buttonMap.get(key).getB()));
+                    }
                 }
+
             }
             bufr.close();
         } catch (FileNotFoundException ex) {
@@ -239,19 +266,18 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
 
     @Override
     public void run() {
-        while (run) {
-            System.out.println("运行中");
+            BnsUtils.logPrint(logTextArea,"运行中");
             robot.delay(100);
             if (comparePoint(buttonMap.get("xueYin"))) {
                 //龙出了 开始转圈圈直到锁定龙
-                System.out.println("龙出了 开始转圈圈直到锁定龙--测试是否一直按着左键");
-                boolean isLockLong = false;
-                while (!isLockLong) {
+                BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙--测试是否一直按着左键");
+//                boolean isLockLong = false;
+                while (comparePoint(buttonMap.get("xueYin"))||comparePoint(buttonMap.get("xueXian"))) {
                     robot.keyPress(KeyEvent.VK_RIGHT);
                     if (comparePoint(buttonMap.get("xueXian"))) {
-                        System.out.println("锁定龙了 松开转圈键");
+                        BnsUtils.logPrint(logTextArea,"锁定龙了 松开转圈键");
                         robot.keyRelease(KeyEvent.VK_RIGHT);//判断锁定龙了 松开转圈键
-                        System.out.println("开始攻击");
+                        BnsUtils.logPrint(logTextArea,"开始攻击");
                         attack();
                         pick();
                         qieXian();
@@ -260,13 +286,12 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                     robot.keyRelease(KeyEvent.VK_RIGHT);
                 }
             }
-        }
     }
-    private static BufferedImage captureRegion(int x, int y, int width, int height) throws AWTException {
-        Robot robot = new Robot();
-        Rectangle region = new Rectangle(x, y, width, height);
-        return robot.createScreenCapture(region);
-    }
+//    private static BufferedImage captureRegion(int x, int y, int width, int height) throws AWTException {
+//        Robot robot = new Robot();
+//        Rectangle region = new Rectangle(x, y, width, height);
+//        return robot.createScreenCapture(region);
+//    }
 
     private void qieXian() {
         robot.keyPress(KeyEvent.VK_ALT);
@@ -277,7 +302,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         robot.delay(150);
         robot.keyRelease(KeyEvent.BUTTON1_MASK);
         robot.delay(150);
-        System.out.println("切2线");
+        BnsUtils.logPrint(logTextArea,"切2线");
         robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY() + 15);
         robot.delay(150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
@@ -295,58 +320,61 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private void pick() {
         Rectangle area = new Rectangle(buttonMap.get("jiantou").getX(), buttonMap.get("jiantou").getY(), 20, 20); // 指定区域的坐标和大小
         BufferedImage oldshot = robot.createScreenCapture(area);
-        System.out.println("保存击杀后箭头方向");
+        BnsUtils.logPrint(logTextArea,"保存击杀后箭头方向");
 
         int isPick = 0;
         while (isPick < 10) {
-            System.out.println("开始寻找箱子");
+            BnsUtils.logPrint(logTextArea,"开始寻找箱子");
             robot.delay(1000);
             if (comparePoint(buttonMap.get("shiQu"))) {
-                System.out.println("找到箱子了，捡起来");
+                BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
             }
-            System.out.println("不在脸上，开始第"+(isPick+1)+"次左转圈寻找");
+            if(!run){
+                return;
+            }
+            BnsUtils.logPrint(logTextArea,"不在脸上，开始第"+(isPick+1)+"次左转圈寻找");
             executeKeyAndTime(KeyEvent.VK_F, 1000);
             robot.delay(2000);
-            System.out.println("获取当前箭头方向");
+            BnsUtils.logPrint(logTextArea,"获取当前箭头方向");
             BufferedImage newshot= robot.createScreenCapture(area);
-            while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9) {
+            while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9&&run) {
                 if (comparePoint(buttonMap.get("shiQu"))) {
-                    System.out.println("找到箱子了，捡起来");
+                    BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
                     executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                     executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
-                    System.out.println("修正方向");
+                    BnsUtils.logPrint(logTextArea,"修正方向");
 
                     while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9) {
-                        System.out.println("当前箭头方向和击杀后箭头方向不匹配，继续修正方向");
+                        BnsUtils.logPrint(logTextArea,"当前箭头方向和击杀后箭头方向不匹配，继续修正方向");
                         executeKeyAndTime(KeyEvent.VK_F, 1000);
                         robot.delay(1000);
                         newshot= robot.createScreenCapture(area);
                     }
-                    System.out.println("修正方向完成");
+                    BnsUtils.logPrint(logTextArea,"修正方向完成");
                     return;
                 }
-                System.out.println("第"+(isPick+1)+"次转圈继续按左转键");
+                BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
                 executeKeyAndTime(KeyEvent.VK_F, 1000);
                 robot.delay(2000);
             }
-            System.out.println("第"+(isPick+1)+"次转圈继续按左转键");
+            BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
             executeKeyAndTime(KeyEvent.VK_W, 2000);
             isPick++;
-            System.out.println("第"+(isPick)+"次转圈找不到箱子前进" + isPick + "点");
+            BnsUtils.logPrint(logTextArea,"第"+(isPick)+"次转圈找不到箱子前进" + isPick + "点");
         }
     }
 
     private void attack() {
-        while (comparePoint(buttonMap.get("xueXian"))) {
-            System.out.println("攻击中");
+        while (comparePoint(buttonMap.get("xueXian"))&&run) {
+            BnsUtils.logPrint(logTextArea,"攻击中");
             executeKeyAndTime(KeyEvent.VK_1, 500);
             executeKeyAndTime(KeyEvent.VK_G, 500);
             executeKeyAndTime(KeyEvent.VK_R, 500);
             executeKeyAndTime(KeyEvent.VK_T, 500);
         }
-        System.out.println("龙G了，停止攻击");
+        BnsUtils.logPrint(logTextArea,"龙G了，停止攻击");
     }
 
     private void executeKeyAndTime(int key, int i) {
@@ -364,8 +392,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         Integer diffR = BnsUtils.diff(pojo.getR(), pixel.getRed());
         Integer diffG = BnsUtils.diff(pojo.getG(), pixel.getGreen());
         Integer diffB = BnsUtils.diff(pojo.getB(), pixel.getBlue());
-        if ((diffR + diffG + diffB) < 100) {
-            System.out.println("匹配到：" + pojo.getButton().getText());
+        if ((diffR + diffG + diffB) < 100&&run) {
+            BnsUtils.logPrint(logTextArea,"匹配到：" + pojo.getButton().getText());
             return true;
         } else {
             return false;
@@ -377,7 +405,6 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         if (e.getKeyCode() == 18) {
             try {
                 mousePoint = MouseInfo.getPointerInfo().getLocation();
-                System.out.println("222");
                 pixel = robot.getPixelColor(mousePoint.x, mousePoint.y);
                 quse.setX ( mousePoint.x);
                 quse.setY ( mousePoint.y);
@@ -391,7 +418,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             }
         }
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            this.run = false;
+           timer.cancel();
             JRun.setText("运行");
             JOptionPane.showMessageDialog(null, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -399,10 +426,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     }
 
     public static void main(String[] args) throws AWTException {
-        MainGui mainGui = new MainGui();
+         mainGui = new MainGui();
     }
-
-
     public void setMenuBar()
 
     {
@@ -414,7 +439,6 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         JMenuItem help_About=new JMenuItem("载入");
         JMenuItem save=new JMenuItem("保存");
 
-        frame.setJMenuBar(myBar);
 
         myBar.add(helpMenu);
 
@@ -422,6 +446,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         helpMenu.add(save);
         save.addActionListener(this);
         help_About.addActionListener(this);
+        frame.setJMenuBar(myBar);
+
 
     }
     @Override
