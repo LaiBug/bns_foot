@@ -325,18 +325,15 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         int isPick = 0;
         while (isPick < 10) {
             BnsUtils.logPrint(logTextArea,"开始寻找箱子");
-            robot.delay(1000);
+            robot.delay(500);
             if (comparePoint(buttonMap.get("shiQu"))) {
                 BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
             }
-            if(!run){
-                return;
-            }
             BnsUtils.logPrint(logTextArea,"不在脸上，开始第"+(isPick+1)+"次左转圈寻找");
             executeKeyAndTime(KeyEvent.VK_F, 1000);
-            robot.delay(2000);
+            robot.delay(500);
             BnsUtils.logPrint(logTextArea,"获取当前箭头方向");
             BufferedImage newshot= robot.createScreenCapture(area);
             while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9&&run) {
@@ -347,6 +344,9 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                     BnsUtils.logPrint(logTextArea,"修正方向");
 
                     while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9) {
+                        if(!run){
+                            return;
+                        }
                         BnsUtils.logPrint(logTextArea,"当前箭头方向和击杀后箭头方向不匹配，继续修正方向");
                         executeKeyAndTime(KeyEvent.VK_F, 1000);
                         robot.delay(1000);
@@ -357,9 +357,12 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 }
                 BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
                 executeKeyAndTime(KeyEvent.VK_F, 1000);
-                robot.delay(2000);
+                robot.delay(500);
             }
             BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
+            if(!run){
+                return;
+            }
             executeKeyAndTime(KeyEvent.VK_W, 2000);
             isPick++;
             BnsUtils.logPrint(logTextArea,"第"+(isPick)+"次转圈找不到箱子前进" + isPick + "点");
