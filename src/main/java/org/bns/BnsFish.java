@@ -176,7 +176,10 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         if (e.getSource() == JRun) {
             if (JRun.getText().equals("运行")) {
                 try {
-
+                    if(!qqLoginApp.isAuth){
+                        JOptionPane.showMessageDialog(frame, "未授权", "提示", JOptionPane.INFORMATION_MESSAGE);
+                        System.exit(0);
+                    }
                     JRun.setText("运行中");
                     run=true;
                     timer = new Timer();
