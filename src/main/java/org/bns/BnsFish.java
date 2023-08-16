@@ -145,30 +145,30 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         } else {
             JOptionPane.showMessageDialog(frame, "免费钓鱼工具，绑定QQ授权使用，2023-10-31后失效，联系方式-VX：  或者QQ：", "提示", JOptionPane.INFORMATION_MESSAGE);
         }
-        qqLoginApp=new QQLoginApp();
-        qqLoginApp.getQQLogin();
-
-        final Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            public void run() {
-                String url=qqLoginApp.aaa();
-                if(!url.contains("i.qq.com")){
-                    if(url.contains("454299035")) {
-                        timer.cancel();
-                        qqLoginApp.isAuth=true;
-                        System.out.println("当前页面的URL地址：" + url);
-                        qqLoginApp.jframe.dispose();
-                    }else {
-                        timer.cancel();
-                        qqLoginApp.isAuth=false;
-                        System.out.println("未授权QQ：请联系管理员：VX" + url);
-                        System.exit(0);
-                    }
-                }
-            }
-        };
-        // 启动定时器
-        timer.scheduleAtFixedRate(task, 2000,2000);
+//        qqLoginApp=new QQLoginApp();
+//        qqLoginApp.getQQLogin();
+//
+//        final Timer timer = new Timer();
+//        TimerTask task = new TimerTask() {
+//            public void run() {
+//                String url=qqLoginApp.aaa();
+//                if(!url.contains("i.qq.com")){
+//                    if(url.contains("454299035")) {
+//                        timer.cancel();
+//                        qqLoginApp.isAuth=true;
+//                        System.out.println("当前页面的URL地址：" + url);
+//                        qqLoginApp.jframe.dispose();
+//                    }else {
+//                        timer.cancel();
+//                        qqLoginApp.isAuth=false;
+//                        System.out.println("未授权QQ：请联系管理员：VX" + url);
+//                        System.exit(0);
+//                    }
+//                }
+//            }
+//        };
+//        // 启动定时器
+//        timer.scheduleAtFixedRate(task, 2000,2000);
     }
 
     @Override
@@ -176,10 +176,10 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         if (e.getSource() == JRun) {
             if (JRun.getText().equals("运行")) {
                 try {
-                    if(!qqLoginApp.isAuth){
-                        JOptionPane.showMessageDialog(frame, "未授权", "提示", JOptionPane.INFORMATION_MESSAGE);
-                        System.exit(0);
-                    }
+//                    if(!qqLoginApp.isAuth){
+//                        JOptionPane.showMessageDialog(frame, "未授权", "提示", JOptionPane.INFORwdMATION_MESSAGE);
+//                        System.exit(0);
+//                    }
                     JRun.setText("运行中");
                     run=true;
                     timer = new Timer();
@@ -307,9 +307,10 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
     @Override
     public void run() {
             BnsUtils.logPrint(logTextArea,"钓鱼中");
-            robot.delay(100);
+            robot.delay(500);
             int fishKey=KeyEvent.VK_7;
-            while(!comparePoint(buttonMap.get("paoGan1"))
+            int i=0;
+        while(!comparePoint(buttonMap.get("paoGan1"))
                     &&!comparePoint(buttonMap.get("paoGan2"))
                     &&!comparePoint(buttonMap.get("zhongYu1"))
                     &&!comparePoint(buttonMap.get("zhongYu2"))){
@@ -317,25 +318,27 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
                 robot.keyPress(fishKey);
                 robot.delay(500);
                 robot.keyRelease(fishKey);
-                robot.delay(500);
-                if (fishKey==KeyEvent.VK_8){
+                robot.delay(2500);
+                if (i==2){
                     stopFish();
                     BnsUtils.logPrint(logTextArea,"请检查物品栏7和8是否有鱼饵");
                     return;
                 }
+                 i++;
                 fishKey=KeyEvent.VK_8;
             }
            robot.delay(888);
             while ((comparePoint(buttonMap.get("paoGan1"))&&comparePoint(buttonMap.get("paoGan2")))
                     ||(comparePoint(buttonMap.get("zhongYu1"))&&comparePoint(buttonMap.get("zhongYu2")))) {
                 BnsUtils.logPrint(logTextArea,"垂钓中");
-                robot.delay(100);
+                robot.delay(500);
                 if(comparePoint(buttonMap.get("zhongYu1"))&&comparePoint(buttonMap.get("zhongYu2"))){
                     BnsUtils.logPrint(logTextArea,"上钩了");
                     robot.delay(500);
                     robot.keyPress(KeyEvent.VK_F);
                     robot.delay(500);
                     robot.keyRelease(KeyEvent.VK_F);
+                    robot.delay(1000);
                 }
             }
     }
