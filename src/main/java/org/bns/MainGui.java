@@ -364,10 +364,10 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 //龙出了 开始转圈圈直到锁定龙
                 BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
                 while (comparePoint(buttonMap.get("xueYin"))||comparePoint(buttonMap.get("xueXian"))) {
-                    robot.keyPress(KeyEvent.VK_RIGHT);
+                    executeKeyAndTime(KeyEvent.VK_RIGHT,1000);
+                    BnsUtils.logPrint(logTextArea,"转圈");
+
                     if (comparePoint(buttonMap.get("xueXian"))) {
-                        BnsUtils.logPrint(logTextArea,"锁定龙了 松开转圈键");
-                        robot.keyRelease(KeyEvent.VK_RIGHT);//判断锁定龙了 松开转圈键
                         BnsUtils.logPrint(logTextArea,"开始攻击");
                         attack();
                         pick();
@@ -375,8 +375,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                         chooseLine();
                         break;
                     }
-                    robot.keyRelease(KeyEvent.VK_RIGHT);
                 }
+
             }
             if (kill>1){
                 chooseLine();
@@ -390,6 +390,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         BufferedImage screenshot = robot.createScreenCapture(area);
         try {
             BufferedImage templateImage = ImageIO.read(new File("2ling.png"));
+
+
             boolean containsImage = BnsUtils.matchImage(screenshot, templateImage, 0.9);//百分90模糊匹配判断是否在2线
             if(containsImage){
                 qieXian("1xian");
@@ -437,7 +439,12 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         while (isPick < 5) {
             Rectangle area = new Rectangle(buttonMap.get("jiantou").getX(), buttonMap.get("jiantou").getY(), 20, 20); // 指定区域的坐标和大小
             BufferedImage oldshot = robot.createScreenCapture(area);
-
+            File outputfile = new File("/image.jpg");
+            try {
+                ImageIO.write(oldshot, "jpg", outputfile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             BnsUtils.logPrint(logTextArea,"开始第"+(isPick+1)+"寻找箱子");
             robot.delay(500);
             if (comparePoint(buttonMap.get("shiQu"))) {
@@ -448,24 +455,24 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 return;
             }
             BnsUtils.logPrint(logTextArea,"不在脸上，左转圈寻找");
-            executeKeyAndTime(KeyEvent.VK_LEFT, 1500);
+            executeKeyAndTime(KeyEvent.VK_LEFT, 500);
             BnsUtils.logPrint(logTextArea,"左转1.5秒");
             robot.delay(500);
             BnsUtils.logPrint(logTextArea,"获取当前箭头方向");
             BufferedImage newshot= robot.createScreenCapture(area);
             while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9&&run) {
                 if (comparePoint(buttonMap.get("shiQu"))) {
-                    BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
+                    BnsUtils.logPrint(logTextArea,"找到11箱子了，捡起来");
                     executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                     executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                     BnsUtils.logPrint(logTextArea,"修正方向");
 
-                    while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9) {
+                    while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.8) {
                         if(!run){
                             return;
                         }
                         BnsUtils.logPrint(logTextArea,"当前箭头方向和击杀后箭头方向不匹配，继续修正方向");
-                        executeKeyAndTime(KeyEvent.VK_LEFT, 1000);
+                        executeKeyAndTime(KeyEvent.VK_LEFT, 500);
                         robot.delay(500);
                         newshot= robot.createScreenCapture(area);
                     }
@@ -473,7 +480,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                     return;
                 }
                 BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
-                executeKeyAndTime(KeyEvent.VK_LEFT, 1000);
+                executeKeyAndTime(KeyEvent.VK_LEFT, 500);
 //                robot.delay(500);
                 newshot= robot.createScreenCapture(area);
 
