@@ -171,7 +171,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
 //        timer.scheduleAtFixedRate(task, 2000,2000);
     }
 
-    @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == JRun) {
             if (JRun.getText().equals("运行")) {
@@ -304,7 +303,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         }
     }
 
-    @Override
     public void run() {
             BnsUtils.logPrint(logTextArea,"钓鱼中");
             robot.delay(500);
@@ -357,7 +355,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         }
     }
 
-    @Override
     public void keyReleased(KeyEvent e) {
         if (e.getKeyCode() == 18) {
             try {
@@ -407,11 +404,9 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
 
 
     }
-    @Override
     public void keyTyped(KeyEvent e) {
     }
 
-    @Override
     public void keyPressed(KeyEvent e) {
     }
 
