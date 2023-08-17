@@ -9,10 +9,35 @@ public class PickPOJO {
     private JLabel xy;
     private JButton button;
 
+    private int flag;//1需要展示RGB,2不需要
     public PickPOJO(String name) {
         this.button = new JButton(name);
         this.jCol = new JLabel("■■■■■■");
         this.xy = new JLabel("(0,0)");
+        this.R=255;
+        this.G=255;
+        this.B=255;
+        this.X=0;
+        this.Y=0;
+    }
+    public PickPOJO(String name,int flag) {
+        this.button = new JButton(name);
+        this.jCol = new JLabel("■■■■■■");
+        this.xy = new JLabel("(0,0)");
+        this.R=255;
+        this.G=255;
+        this.B=255;
+        this.X=0;
+        this.Y=0;
+        this.flag=flag;
+    }
+
+    public int getFlag() {
+        return flag;
+    }
+
+    public void setFlag(int flag) {
+        this.flag = flag;
     }
 
     public JLabel getjCol() {

@@ -1,4 +1,4 @@
-package org.bns;
+package org.bns.util;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
