@@ -3,15 +3,17 @@ package org.bns;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.bns.pojo.PickPOJO;
+import org.bns.util.BnsUtils;
+import org.bns.util.Constants;
+import org.bns.util.QQLoginApp;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
@@ -28,15 +30,23 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private JComboBox<String> comboBox;
 
     private static Timer timer;
+    private static boolean secondLineSuccess=false;
+    private static boolean firstLineSuccess=true;
+
+    private static int kill=0;
 
     private static PickPOJO quse =new PickPOJO("当前取色");
 
     public static Map<String, PickPOJO> buttonMap = new HashMap<String, PickPOJO>() {{
-        put("xueYin", new PickPOJO("血隐"));
-        put("xueXian", new PickPOJO("血现"));
-        put("shiQu", new PickPOJO("拾取"));
-        put("jiantou", new PickPOJO("箭头"));
-        put("qieXian", new PickPOJO("切线"));
+        put("xueYin", new PickPOJO("血隐",1));
+        put("xueXian", new PickPOJO("血现",1));
+        put("shiQu", new PickPOJO("拾取",1));
+        put("y", new PickPOJO("Y键取色",1));
+        put("jiantou", new PickPOJO("箭头",2));
+        put("pindao", new PickPOJO("频道",2));
+        put("1xian", new PickPOJO("1线",2));
+        put("2xian", new PickPOJO("2线",2));
+
     }};
 
     Robot robot = new Robot();
@@ -48,13 +58,24 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     Color pixel = new Color(0, 0, 0);
     JButton JRun;
 
+    QQLoginApp qqLoginApp;
+
     public MainGui() throws AWTException {
 
+        frame = new JFrame("BnsBoss");
+        Image icon = Toolkit.getDefaultToolkit().getImage(BnsFish.class.getResource("/stat2.png"));
+        JFrame.setDefaultLookAndFeelDecorated(true);
 
-
-        frame = new JFrame("Bns");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(550, 400);
+        frame.setSize(600, 400);
+        frame.setIconImage(icon);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.out.println("Window is closing");
+                System.exit(0);
+            }
+        });
         // 创建面板
         panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -63,19 +84,18 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         openDia = new FileDialog(this, "打开", FileDialog.LOAD);
         saveDia = new FileDialog(this, "保存", FileDialog.SAVE);
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
         constraints.anchor = GridBagConstraints.WEST;
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(-10, 5, 30, 5);
 
         constraints.gridy = 0;
-        constraints.gridx = 0;
+        constraints.gridx = 2;
         panel.add(quse.getjCol(), constraints);
         constraints.gridy = 0;
-        constraints.gridx = 1;
+        constraints.gridx = 3;
         panel.add(quse.getXy(), constraints);
         constraints.gridy = 0;
-        constraints.gridx = 2;
+        constraints.gridx = 4;
         panel.add( new JLabel("当前取色"), constraints);
         quse.getButton().addKeyListener(this);
         quse.getButton().addActionListener(this);
@@ -83,27 +103,53 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
 
         constraints.insets = new Insets(5, 5, 5, 5);
 
-        int i=1;
+        int x=0;
         for (String key : buttonMap.keySet()) {
-            constraints.gridy = i;
-            constraints.gridx = 0;
-            panel.add(buttonMap.get(key).getjCol(), constraints);
-            constraints.gridy = i;
-            constraints.gridx = 1;
-            panel.add(buttonMap.get(key).getXy(), constraints);
-            constraints.gridy = i;
-            constraints.gridx = 2;
-            panel.add(buttonMap.get(key).getButton(), constraints);
-            buttonMap.get(key).getButton().addKeyListener(this);
-            buttonMap.get(key).getButton().addActionListener(this);
+            if(buttonMap.get(key).getFlag()==2){
+                constraints.gridy = 1;
+                constraints.gridx = x;
+                x++;
+                panel.add(buttonMap.get(key).getXy(), constraints);
+//                buttonMap.get(key).getXy().setBackground(new Color(52, 152, 219));
+//                buttonMap.get(key).getXy().setOpaque(true);
+                constraints.gridy = 1;
+                constraints.gridx = x;
+                panel.add(buttonMap.get(key).getButton(), constraints);
+                buttonMap.get(key).getButton().setBackground(new Color(52, 152, 219)); // 设置按钮的背景颜色
+                buttonMap.get(key).getButton().setForeground(Color.WHITE); // 设置按钮的前景色
+//                buttonMap.get(key).getButton().setBackground(Color.BLUE); // 设置按钮的背景颜色
+//                buttonMap.get(key).getButton().setBorder(BorderFactory.createRaisedBevelBorder());
 
-            i++;
+//                buttonMap.get(key).getButton().setFont(new Font("Arial", Font.BOLD, 16)); // 设置按钮的字体样式
+
+                buttonMap.get(key).getButton().addKeyListener(this);
+                buttonMap.get(key).getButton().addActionListener(this);
+                x++;
+            }
         }
+        int y=2;
+        for (String key : buttonMap.keySet()) {
+            if(buttonMap.get(key).getFlag()==1){
+                constraints.gridy = y;
+                constraints.gridx = 0;
+                panel.add(buttonMap.get(key).getjCol(), constraints);
+                constraints.gridy = y;
+                constraints.gridx = 1;
+                panel.add(buttonMap.get(key).getXy(), constraints);
+                constraints.gridy = y;
+                constraints.gridx = 2;
+                panel.add(buttonMap.get(key).getButton(), constraints);
+                buttonMap.get(key).getButton().addKeyListener(this);
+                buttonMap.get(key).getButton().addActionListener(this);
+                y++;
+            }
+        }
+
         String[] options = {"Option 1", "Option 2", "Option 3"};
         comboBox = new JComboBox(options);
-        constraints.gridy = i;
+        constraints.gridy = y;
         constraints.gridx = 0;
-        constraints.gridwidth = 2;
+        constraints.gridwidth = 3;
         panel.add(comboBox, constraints);
         logTextArea=new JTextArea(10,27);
         logTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -112,9 +158,11 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         scrollPane = new JScrollPane(logTextArea);
 
 //        scrollPane.setPreferredSize(new Dimension(300, 200)); // 设置宽度和高度
-        constraints.gridy = 0;
-        constraints.gridx = 4;
-        constraints.gridheight=i+1;
+        constraints.gridy = 2;
+        constraints.gridx = 3;
+        constraints.gridheight=5;
+        constraints.gridwidth=x-3;
+
         panel.add(scrollPane, constraints);
         logTextArea.addKeyListener(this);
 //        logTextArea.addAncestorListener(this);
@@ -123,9 +171,9 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         JRun=new JButton("运行");
         JRun.addActionListener(this);
         JRun.addKeyListener(this);
-        constraints.gridy = i+1;
+        constraints.gridy = y+1;
         constraints.gridx = 0;
-        constraints.gridwidth=7;
+        constraints.gridwidth=3;
         panel.add(JRun, constraints);
 
         frame.getContentPane().add(panel);
@@ -134,14 +182,54 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         // 设置主窗口可见
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    }
+        LocalDate currentDate = LocalDate.now();  // 获取当前日期
 
+        LocalDate targetDate = LocalDate.of(Constants.LIMIT_YEAR, Constants.LIMIT_MONTH, Constants.LIMIT_DAY);  // 目标日期为2023年10月31日
+        if (currentDate.isAfter(targetDate)) {
+            JOptionPane.showMessageDialog(frame, "已超免费使用期限，如需继续使用请联系\nVX："+Constants.ADMIN_VX+"  或者QQ："+Constants.ADMIN_QQ, "提示", JOptionPane.INFORMATION_MESSAGE);
+            BnsUtils.logPrint(logTextArea,"3秒后自动关闭");
+            robot.delay(3000);
+            System.exit(0);
+        } else {
+            JOptionPane.showMessageDialog(frame, "免费工具，以后需要绑定QQ授权使用，"+Constants.LIMIT_YEAR+
+                    "-"+ Constants.LIMIT_MONTH+"-"+Constants.LIMIT_DAY+"后失效\n联系方式VX："+Constants.ADMIN_VX+"  或者QQ："+Constants.ADMIN_QQ, "提示", JOptionPane.INFORMATION_MESSAGE);
+        }
+        importTxt("./","boss.txt");
+    }
+    private void authLogin() {
+        qqLoginApp=new QQLoginApp();
+        qqLoginApp.getQQLogin();
+        final Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            public void run() {
+                String url=qqLoginApp.aaa();
+                if(!url.contains("i.qq.com")){
+                    if(url.contains(Constants.USER_QQ)) {
+                        timer.cancel();
+                        qqLoginApp.isAuth=true;
+                        System.out.println("当前页面的URL地址：" + url);
+                        qqLoginApp.jframe.dispose();
+                    }else {
+                        timer.cancel();
+                        qqLoginApp.isAuth=false;
+                        System.out.println("未授权QQ!请联系管理员VX:" + Constants.ADMIN_VX+",QQ:"+Constants.ADMIN_QQ);
+                        System.exit(0);
+                    }
+                }
+            }
+        };
+        // 启动定时器
+        timer.scheduleAtFixedRate(task, 2000,2000);
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == JRun) {
             if (JRun.getText().equals("运行")) {
                 try {
-
+                    if(qqLoginApp!=null&&!qqLoginApp.isAuth){
+                        JOptionPane.showMessageDialog(frame, "未授权", "提示", JOptionPane.INFORMATION_MESSAGE);
+                        System.exit(0);
+                    }
                     JRun.setText("运行中");
                     run=true;
                     timer = new Timer();
@@ -156,23 +244,20 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                     BnsUtils.logPrint(logTextArea,"开始运行");
                 } catch (Exception ex) {
                     run=false;
-                    robot.delay(2000);
+                    robot.delay(500);
                     BnsUtils.logPrint(logTextArea,"运行错误，已停止");
                     timer.cancel();
                     throw new RuntimeException(ex);
                 }
             } else {
-                run=false;
-                timer.cancel();
-                robot.delay(2000);
-
-                BnsUtils.logPrint(logTextArea,"已停止运行");
-                JRun.setText("运行");
-                JOptionPane.showMessageDialog(null, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
+                stopRun();
             }
         }
         if(e.getActionCommand()=="载入"){
-            importTxt();
+            openDia.setVisible(true);
+            String dirpath = openDia.getDirectory();
+            String fileName = openDia.getFile();
+            importTxt(dirpath,fileName);
 
         }else if(e.getActionCommand()=="保存"){
             saveTxt();
@@ -180,8 +265,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         for (String key : buttonMap.keySet()) {
             if (e.getSource() == buttonMap.get(key).getButton()) {
                 PickPOJO p = buttonMap.get(key);
-                if (quse.getX() == -1) {
-                    JOptionPane.showMessageDialog(null, "此功能:" + p.getButton().getText(), "提示", JOptionPane.INFORMATION_MESSAGE);
+                if (quse.getX() == 0&&quse.getX() == 0) {
+                    JOptionPane.showMessageDialog(frame, "请按ALT取色" , "提示", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     p.setX(quse.getX()) ;
                     p.setY(quse.getY())  ;
@@ -193,6 +278,17 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 }
             }
         }
+    }
+
+    private void stopRun() {
+        run=false;
+        timer.cancel();
+        robot.delay(500);
+
+        BnsUtils.logPrint(logTextArea,"已停止运行");
+        JRun.setText("运行");
+        JOptionPane.showMessageDialog(frame, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
+
     }
 
     private void saveTxt() {
@@ -222,11 +318,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         }
     }
 
-    private void importTxt() {
-        openDia.setVisible(true);
-        String dirpath = openDia.getDirectory();
-        String fileName = openDia.getFile();
-
+    private void importTxt(String dirpath, String fileName) {
         if (dirpath == null || fileName == null) {
             return;
         }
@@ -270,8 +362,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             robot.delay(100);
             if (comparePoint(buttonMap.get("xueYin"))) {
                 //龙出了 开始转圈圈直到锁定龙
-                BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙--测试是否一直按着左键");
-//                boolean isLockLong = false;
+                BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
                 while (comparePoint(buttonMap.get("xueYin"))||comparePoint(buttonMap.get("xueXian"))) {
                     robot.keyPress(KeyEvent.VK_RIGHT);
                     if (comparePoint(buttonMap.get("xueXian"))) {
@@ -280,59 +371,85 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                         BnsUtils.logPrint(logTextArea,"开始攻击");
                         attack();
                         pick();
-                        qieXian();
+                        chooseLine();
+                        chooseLine();
                         break;
                     }
                     robot.keyRelease(KeyEvent.VK_RIGHT);
                 }
             }
+            if (kill>1){
+                chooseLine();
+                chooseLine();
+                kill=0;
+            }
     }
-//    private static BufferedImage captureRegion(int x, int y, int width, int height) throws AWTException {
-//        Robot robot = new Robot();
-//        Rectangle region = new Rectangle(x, y, width, height);
-//        return robot.createScreenCapture(region);
-//    }
 
-    private void qieXian() {
+    private void chooseLine() {
+        Rectangle area = new Rectangle(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY(), 20, 20); // 指定区域的坐标和大小
+        BufferedImage screenshot = robot.createScreenCapture(area);
+        try {
+            BufferedImage templateImage = ImageIO.read(new File("2ling.png"));
+            boolean containsImage = BnsUtils.matchImage(screenshot, templateImage, 0.9);//百分90模糊匹配判断是否在2线
+            if(containsImage){
+                qieXian("1xian");
+            }else {
+                qieXian("2xian");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean qieXian(String line) {
         robot.keyPress(KeyEvent.VK_ALT);
         robot.delay(1150);
-        robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY());
+        robot.mouseMove(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY());
         robot.delay(150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
         robot.delay(150);
         robot.keyRelease(KeyEvent.BUTTON1_MASK);
-        robot.delay(150);
-        BnsUtils.logPrint(logTextArea,"切2线");
-        robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY() + 15);
-        robot.delay(150);
+        robot.delay(1150);
+        BnsUtils.logPrint(logTextArea,"切"+line);
+        robot.mouseMove(buttonMap.get(line).getX(), buttonMap.get(line).getY() );
+        robot.delay(1150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
-        robot.delay(50);
-        robot.keyRelease(KeyEvent.BUTTON1_MASK);
         robot.delay(150);
+        robot.keyRelease(KeyEvent.BUTTON1_MASK);
+        robot.delay(1150);
         robot.keyRelease(KeyEvent.VK_ALT);
-        robot.delay(150);
-        robot.keyPress(KeyEvent.VK_Y);
-        robot.delay(50);
-        robot.keyRelease(KeyEvent.VK_Y);
-        robot.delay(150);
+        robot.delay(1150);
+        if (comparePoint(buttonMap.get("y"))){
+            robot.keyPress(KeyEvent.VK_Y);
+            robot.delay(550);
+            robot.keyRelease(KeyEvent.VK_Y);
+            robot.delay(1150);
+            return true;
+        }
+        return false;
+
     }
 
     private void pick() {
-        Rectangle area = new Rectangle(buttonMap.get("jiantou").getX(), buttonMap.get("jiantou").getY(), 20, 20); // 指定区域的坐标和大小
-        BufferedImage oldshot = robot.createScreenCapture(area);
         BnsUtils.logPrint(logTextArea,"保存击杀后箭头方向");
 
         int isPick = 0;
-        while (isPick < 10) {
-            BnsUtils.logPrint(logTextArea,"开始寻找箱子");
+        while (isPick < 5) {
+            Rectangle area = new Rectangle(buttonMap.get("jiantou").getX(), buttonMap.get("jiantou").getY(), 20, 20); // 指定区域的坐标和大小
+            BufferedImage oldshot = robot.createScreenCapture(area);
+
+            BnsUtils.logPrint(logTextArea,"开始第"+(isPick+1)+"寻找箱子");
             robot.delay(500);
             if (comparePoint(buttonMap.get("shiQu"))) {
                 BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
+                robot.delay(1000);
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
+                return;
             }
-            BnsUtils.logPrint(logTextArea,"不在脸上，开始第"+(isPick+1)+"次左转圈寻找");
-            executeKeyAndTime(KeyEvent.VK_F, 1000);
+            BnsUtils.logPrint(logTextArea,"不在脸上，左转圈寻找");
+            executeKeyAndTime(KeyEvent.VK_LEFT, 1500);
+            BnsUtils.logPrint(logTextArea,"左转1.5秒");
             robot.delay(500);
             BnsUtils.logPrint(logTextArea,"获取当前箭头方向");
             BufferedImage newshot= robot.createScreenCapture(area);
@@ -348,24 +465,25 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                             return;
                         }
                         BnsUtils.logPrint(logTextArea,"当前箭头方向和击杀后箭头方向不匹配，继续修正方向");
-                        executeKeyAndTime(KeyEvent.VK_F, 1000);
-                        robot.delay(1000);
+                        executeKeyAndTime(KeyEvent.VK_LEFT, 1000);
+                        robot.delay(500);
                         newshot= robot.createScreenCapture(area);
                     }
                     BnsUtils.logPrint(logTextArea,"修正方向完成");
                     return;
                 }
                 BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
-                executeKeyAndTime(KeyEvent.VK_F, 1000);
-                robot.delay(500);
+                executeKeyAndTime(KeyEvent.VK_LEFT, 1000);
+//                robot.delay(500);
+                newshot= robot.createScreenCapture(area);
+
             }
-            BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
+            BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈结束，找不到箱子，前进一步继续寻找");
             if(!run){
                 return;
             }
             executeKeyAndTime(KeyEvent.VK_W, 2000);
             isPick++;
-            BnsUtils.logPrint(logTextArea,"第"+(isPick)+"次转圈找不到箱子前进" + isPick + "点");
         }
     }
 
@@ -378,6 +496,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             executeKeyAndTime(KeyEvent.VK_T, 500);
         }
         BnsUtils.logPrint(logTextArea,"龙G了，停止攻击");
+        kill++;
+
     }
 
     private void executeKeyAndTime(int key, int i) {
@@ -423,7 +543,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
            timer.cancel();
             JRun.setText("运行");
-            JOptionPane.showMessageDialog(null, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
         }
 
     }

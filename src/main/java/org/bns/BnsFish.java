@@ -2,23 +2,18 @@ package org.bns;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import org.bns.pojo.PickPOJO;
+import org.bns.util.BnsUtils;
+import org.bns.util.Constants;
+import org.bns.util.QQLoginApp;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
+import java.awt.event.*;
 import java.io.*;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runnable {
@@ -46,7 +41,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
     QQLoginApp qqLoginApp;
 
     public BnsFish() throws AWTException {
-
         frame = new JFrame("BnsFish");
         Image icon = Toolkit.getDefaultToolkit().getImage(BnsFish.class.getResource("/stat2.png"));
         JFrame.setDefaultLookAndFeelDecorated(true);
@@ -54,6 +48,13 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
 //        ImageIcon icon = new ImageIcon("/stat2.ico"); // 替换为实际图标文件的路径
         frame.setSize(450, 350);
         frame.setIconImage(icon);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.out.println("Window is closing");
+                System.exit(0);
+            }
+        });
 
         // 创建面板
         panel = new JPanel();
@@ -63,7 +64,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         openDia = new FileDialog(this, "打开", FileDialog.LOAD);
         saveDia = new FileDialog(this, "保存", FileDialog.SAVE);
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
         constraints.anchor = GridBagConstraints.WEST;
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(-10, 5, 30, 5);
@@ -99,25 +99,16 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
 
             i++;
         }
-//        String[] options = {"Option 1", "Option 2", "Option 3"};
-//        comboBox = new JComboBox(options);
-//        constraints.gridy = i;
-//        constraints.gridx = 0;
-//        constraints.gridwidth = 2;
-//        panel.add(comboBox, constraints);
         logTextArea=new JTextArea(10,27);
         logTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         logTextArea.setEditable(false);
 
         scrollPane = new JScrollPane(logTextArea);
-
-//        scrollPane.setPreferredSize(new Dimension(300, 200)); // 设置宽度和高度
         constraints.gridy = 0;
         constraints.gridx = 4;
         constraints.gridheight=i+1;
         panel.add(scrollPane, constraints);
         logTextArea.addKeyListener(this);
-//        logTextArea.addAncestorListener(this);
         scrollPane.addKeyListener(this);
 
         JRun=new JButton("运行");
@@ -136,55 +127,60 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         LocalDate currentDate = LocalDate.now();  // 获取当前日期
 
-        LocalDate targetDate = LocalDate.of(2023, 10, 31);  // 目标日期为2023年10月31日
+        LocalDate targetDate = LocalDate.of(Constants.LIMIT_YEAR, Constants.LIMIT_MONTH, Constants.LIMIT_DAY);  // 目标日期为2023年10月31日
         if (currentDate.isAfter(targetDate)) {
-            JOptionPane.showMessageDialog(frame, "已超免费使用期限，如需继续使用请联系-VX：  或者QQ：", "提示", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "已超免费使用期限，如需继续使用请联系\nVX："+Constants.ADMIN_VX+"  或者QQ："+Constants.ADMIN_QQ, "提示", JOptionPane.INFORMATION_MESSAGE);
             BnsUtils.logPrint(logTextArea,"3秒后自动关闭");
             robot.delay(3000);
             System.exit(0);
         } else {
-            JOptionPane.showMessageDialog(frame, "免费钓鱼工具，绑定QQ授权使用，2023-10-31后失效，联系方式-VX：  或者QQ：", "提示", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "免费工具，以后需要绑定QQ授权使用，"+Constants.LIMIT_YEAR+
+                    "-"+ Constants.LIMIT_MONTH+"-"+Constants.LIMIT_DAY+"后失效\n联系方式VX："+Constants.ADMIN_VX+"  或者QQ："+Constants.ADMIN_QQ, "提示", JOptionPane.INFORMATION_MESSAGE);
         }
-//        qqLoginApp=new QQLoginApp();
-//        qqLoginApp.getQQLogin();
-//
-//        final Timer timer = new Timer();
-//        TimerTask task = new TimerTask() {
-//            public void run() {
-//                String url=qqLoginApp.aaa();
-//                if(!url.contains("i.qq.com")){
-//                    if(url.contains("454299035")) {
-//                        timer.cancel();
-//                        qqLoginApp.isAuth=true;
-//                        System.out.println("当前页面的URL地址：" + url);
-//                        qqLoginApp.jframe.dispose();
-//                    }else {
-//                        timer.cancel();
-//                        qqLoginApp.isAuth=false;
-//                        System.out.println("未授权QQ：请联系管理员：VX" + url);
-//                        System.exit(0);
-//                    }
-//                }
-//            }
-//        };
-//        // 启动定时器
-//        timer.scheduleAtFixedRate(task, 2000,2000);
+        importTxt("./","fish.txt");
+
+//        authLogin();//开启授权
+    }
+
+    private void authLogin() {
+        qqLoginApp=new QQLoginApp();
+        qqLoginApp.getQQLogin();
+        final Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            public void run() {
+                String url=qqLoginApp.aaa();
+                if(!url.contains("i.qq.com")){
+                    if(url.contains(Constants.USER_QQ)) {
+                        timer.cancel();
+                        qqLoginApp.isAuth=true;
+                        System.out.println("当前页面的URL地址：" + url);
+                        qqLoginApp.jframe.dispose();
+                    }else {
+                        timer.cancel();
+                        qqLoginApp.isAuth=false;
+                        System.out.println("未授权QQ!请联系管理员VX:" + Constants.ADMIN_VX+",QQ:"+Constants.ADMIN_QQ);
+                        System.exit(0);
+                    }
+                }
+            }
+        };
+        // 启动定时器
+        timer.scheduleAtFixedRate(task, 2000,2000);
     }
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == JRun) {
             if (JRun.getText().equals("运行")) {
                 try {
-//                    if(!qqLoginApp.isAuth){
-//                        JOptionPane.showMessageDialog(frame, "未授权", "提示", JOptionPane.INFORwdMATION_MESSAGE);
-//                        System.exit(0);
-//                    }
+                    if(qqLoginApp!=null&&!qqLoginApp.isAuth){
+                        JOptionPane.showMessageDialog(frame, "未授权", "提示", JOptionPane.INFORMATION_MESSAGE);
+                        System.exit(0);
+                    }
                     JRun.setText("运行中");
                     run=true;
                     timer = new Timer();
                     TimerTask task = new TimerTask() {
                         public void run() {
-                            // 执行定时任务的逻辑
                             mainGui.run();
                         }
                     };
@@ -203,7 +199,10 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
             }
         }
         if(e.getActionCommand()=="载入"){
-            importTxt();
+            openDia.setVisible(true);
+            String dirpath = openDia.getDirectory();
+            String fileName = openDia.getFile();
+            importTxt(dirpath,fileName);
 
         }else if(e.getActionCommand()=="保存"){
             saveTxt();
@@ -211,8 +210,8 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         for (String key : buttonMap.keySet()) {
             if (e.getSource() == buttonMap.get(key).getButton()) {
                 PickPOJO p = buttonMap.get(key);
-                if (quse.getX() == -1) {
-                    JOptionPane.showMessageDialog(null, "此功能:" + p.getButton().getText(), "提示", JOptionPane.INFORMATION_MESSAGE);
+                if (quse.getX() == 0&&quse.getY() == 0) {
+                    JOptionPane.showMessageDialog(frame, "请按ALT取色" , "提示", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     p.setX(quse.getX()) ;
                     p.setY(quse.getY())  ;
@@ -228,11 +227,10 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
     private void stopFish(){
         run=false;
         timer.cancel();
-        robot.delay(2000);
-
+        robot.delay(100);
         BnsUtils.logPrint(logTextArea,"已停止运行");
         JRun.setText("运行");
-        JOptionPane.showMessageDialog(null, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(frame, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
     }
     private void saveTxt() {
         saveDia.setVisible(true);
@@ -250,7 +248,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
                 aa.put(key, buttonMap.get(key).getX() + "," + buttonMap.get(key).getY() + "," + buttonMap.get(key).getR() + "," + buttonMap.get(key).getG() + "," + buttonMap.get(key).getB());
             }
             String text = JSONObject.toJSONString(aa);
-
             BnsUtils.logPrint(logTextArea,"保存成功" );
             bufw.write(text);
             bufw.close();
@@ -261,11 +258,7 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         }
     }
 
-    private void importTxt() {
-        openDia.setVisible(true);
-        String dirpath = openDia.getDirectory();
-        String fileName = openDia.getFile();
-
+    private void importTxt(String dirpath, String fileName) {
         if (dirpath == null || fileName == null) {
             return;
         }
@@ -292,7 +285,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
                         buttonMap.get(key).getjCol().setForeground(new Color(buttonMap.get(key).getR(), buttonMap.get(key).getG(), buttonMap.get(key).getB()));
                     }
                 }
-
             }
             BnsUtils.logPrint(logTextArea,"导入成功");
             bufr.close();
@@ -374,7 +366,7 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
            timer.cancel();
             JRun.setText("运行");
-            JOptionPane.showMessageDialog(null, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "已停止运行", "提示", JOptionPane.INFORMATION_MESSAGE);
         }
 
     }
@@ -385,7 +377,6 @@ public class BnsFish extends JFrame  implements ActionListener, KeyListener,Runn
     public void setMenuBar()
 
     {
-
         JMenuBar myBar=new JMenuBar();
 
         JMenu helpMenu=new JMenu("帮助");

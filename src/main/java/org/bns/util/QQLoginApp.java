@@ -1,24 +1,12 @@
-package org.bns;
-import javafx.application.Application;
+package org.bns.util;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Worker;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import javafx.stage.Stage;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.*;
-import java.net.URISyntaxException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class QQLoginApp extends  JFrame{
     private static final int WIDTH = 800;
@@ -26,9 +14,9 @@ public class QQLoginApp extends  JFrame{
     private JFXPanel jfxPanel;
 
     static WebView webView;
-     static JFrame jframe;
+     public static JFrame jframe;
     static WebEngine webEngine;
-    static boolean isAuth=false;
+    public static boolean isAuth=false;
     public static void getQQLogin() {
 
         QQLoginApp browserSimulator = new QQLoginApp();
