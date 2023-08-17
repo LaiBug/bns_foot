@@ -7,6 +7,7 @@ import org.bns.util.BnsUtils;
 import org.bns.util.Constants;
 import org.bns.util.QQLoginApp;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -29,6 +30,10 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private JComboBox<String> comboBox;
 
     private static Timer timer;
+    private static boolean secondLineSuccess=false;
+    private static boolean firstLineSuccess=true;
+
+    private static int kill=0;
 
     private static PickPOJO quse =new PickPOJO("当前取色");
 
@@ -36,6 +41,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         put("xueYin", new PickPOJO("血隐",1));
         put("xueXian", new PickPOJO("血现",1));
         put("shiQu", new PickPOJO("拾取",1));
+        put("y", new PickPOJO("Y键取色",1));
         put("jiantou", new PickPOJO("箭头",2));
         put("pindao", new PickPOJO("频道",2));
         put("1xian", new PickPOJO("1线",2));
@@ -357,7 +363,6 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             if (comparePoint(buttonMap.get("xueYin"))) {
                 //龙出了 开始转圈圈直到锁定龙
                 BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
-//                boolean isLockLong = false;
                 while (comparePoint(buttonMap.get("xueYin"))||comparePoint(buttonMap.get("xueXian"))) {
                     robot.keyPress(KeyEvent.VK_RIGHT);
                     if (comparePoint(buttonMap.get("xueXian"))) {
@@ -366,41 +371,63 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                         BnsUtils.logPrint(logTextArea,"开始攻击");
                         attack();
                         pick();
-                        qieXian();
+                        chooseLine();
+                        chooseLine();
                         break;
                     }
                     robot.keyRelease(KeyEvent.VK_RIGHT);
                 }
             }
+            if (kill>1){
+                chooseLine();
+                chooseLine();
+                kill=0;
+            }
     }
-//    private static BufferedImage captureRegion(int x, int y, int width, int height) throws AWTException {
-//        Robot robot = new Robot();
-//        Rectangle region = new Rectangle(x, y, width, height);
-//        return robot.createScreenCapture(region);
-//    }
 
-    private void qieXian() {
+    private void chooseLine() {
+        Rectangle area = new Rectangle(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY(), 20, 20); // 指定区域的坐标和大小
+        BufferedImage screenshot = robot.createScreenCapture(area);
+        try {
+            BufferedImage templateImage = ImageIO.read(new File("2ling.png"));
+            boolean containsImage = BnsUtils.matchImage(screenshot, templateImage, 0.9);//百分90模糊匹配判断是否在2线
+            if(containsImage){
+                qieXian("1xian");
+            }else {
+                qieXian("2xian");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean qieXian(String line) {
         robot.keyPress(KeyEvent.VK_ALT);
         robot.delay(1150);
-        robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY());
+        robot.mouseMove(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY());
         robot.delay(150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
         robot.delay(150);
         robot.keyRelease(KeyEvent.BUTTON1_MASK);
-        robot.delay(150);
-        BnsUtils.logPrint(logTextArea,"切2线");
-        robot.mouseMove(buttonMap.get("qieXian").getX(), buttonMap.get("qieXian").getY() + 15);
-        robot.delay(150);
+        robot.delay(1150);
+        BnsUtils.logPrint(logTextArea,"切"+line);
+        robot.mouseMove(buttonMap.get(line).getX(), buttonMap.get(line).getY() );
+        robot.delay(1150);
         robot.keyPress(KeyEvent.BUTTON1_MASK);
-        robot.delay(50);
-        robot.keyRelease(KeyEvent.BUTTON1_MASK);
         robot.delay(150);
+        robot.keyRelease(KeyEvent.BUTTON1_MASK);
+        robot.delay(1150);
         robot.keyRelease(KeyEvent.VK_ALT);
-        robot.delay(150);
-        robot.keyPress(KeyEvent.VK_Y);
-        robot.delay(50);
-        robot.keyRelease(KeyEvent.VK_Y);
-        robot.delay(150);
+        robot.delay(1150);
+        if (comparePoint(buttonMap.get("y"))){
+            robot.keyPress(KeyEvent.VK_Y);
+            robot.delay(550);
+            robot.keyRelease(KeyEvent.VK_Y);
+            robot.delay(1150);
+            return true;
+        }
+        return false;
+
     }
 
     private void pick() {
@@ -469,6 +496,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             executeKeyAndTime(KeyEvent.VK_T, 500);
         }
         BnsUtils.logPrint(logTextArea,"龙G了，停止攻击");
+        kill++;
+
     }
 
     private void executeKeyAndTime(int key, int i) {
