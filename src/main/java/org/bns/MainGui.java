@@ -27,7 +27,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     public static MainGui mainGui;
     private JFrame frame;
     private JPanel panel;
-    private JComboBox<String> comboBox;
+    private JComboBox<String> professionBox;
 
     private static Timer timer;
     private static boolean secondLineSuccess=false;
@@ -147,12 +147,12 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             }
         }
 
-        String[] options = {"Option 1", "Option 2", "Option 3"};
-        comboBox = new JComboBox(options);
+        String[] options = {"风召", "暗刺", "黑力","雷灵","气功","剑士","枪手","弓手","气宗","拳师",};
+        professionBox = new JComboBox(options);
         constraints.gridy = y;
         constraints.gridx = 0;
         constraints.gridwidth = 3;
-        panel.add(comboBox, constraints);
+        panel.add(professionBox, constraints);
         logTextArea=new JTextArea(10,27);
         logTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         logTextArea.setEditable(false);
@@ -366,7 +366,8 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
             if (comparePoint(buttonMap.get("xueYin"))) {
                 executeKeyAndTime(KeyEvent.VK_RIGHT,500);
                 BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
-            }else   if (comparePoint(buttonMap.get("xueXian"))) {
+            }
+            if (comparePoint(buttonMap.get("xueXian"))) {
                 BnsUtils.logPrint(logTextArea,"锁定龙了");
                 attack();
                 pick();
@@ -489,6 +490,9 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
 
     private void attack() {
         BnsUtils.logPrint(logTextArea,"开始攻击");
+        String profession = (String) professionBox.getSelectedItem();
+        BnsUtils.logPrint(logTextArea,profession);
+
         while (comparePoint(buttonMap.get("xueXian"))&&run) {
             BnsUtils.logPrint(logTextArea,"攻击中");
             executeKeyAndTime(KeyEvent.VK_1, 500);
