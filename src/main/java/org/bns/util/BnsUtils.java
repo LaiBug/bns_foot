@@ -2,12 +2,12 @@ package org.bns.util;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 public class BnsUtils {
-
 
     public static int diff(Integer a, Integer b) {
         if (a >= b) {
@@ -40,6 +40,18 @@ public class BnsUtils {
 
         return false;
     }
+
+
+    public static void saveBufferedImage(BufferedImage image, String formatName, String outputFilePath) {
+        try {
+            File outputFile = new File(outputFilePath);
+            ImageIO.write(image, formatName, outputFile);
+            System.out.println("图片保存成功！");
+        } catch (IOException e) {
+            System.out.println("保存图片时出错：" + e.getMessage());
+        }
+    }
+
     public static double compareImages(BufferedImage source, BufferedImage target, int x, int y) {
         int targetWidth = target.getWidth();
         int targetHeight = target.getHeight();
