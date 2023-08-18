@@ -363,21 +363,21 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     @Override
     public void run() {
             BnsUtils.logPrint(logTextArea,"运行中");
-            robot.delay(100);
             if (comparePoint(buttonMap.get("xueYin"))) {
                 executeKeyAndTime(KeyEvent.VK_RIGHT,500);
                 BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
-            }
-            if (comparePoint(buttonMap.get("xueXian"))) {
+            }else   if (comparePoint(buttonMap.get("xueXian"))) {
                 BnsUtils.logPrint(logTextArea,"锁定龙了");
                 attack();
                 pick();
                 chooseLine();
                 chooseLine();
             }
-            if (kill>1){
-                chooseLine();
-                chooseLine();
+            Rectangle area = new Rectangle(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY(), 15, 20); // 指定区域的坐标和大小
+            BufferedImage nowLine = robot.createScreenCapture(area);
+             boolean containsImage = BnsUtils.matchImage(nowLine, beginLine,0.9);//百分90模糊匹配判断是否在2线
+            if(kill!=1&&!containsImage){
+                qieXian("1xian");
                 kill=0;
             }
     }
