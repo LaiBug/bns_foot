@@ -244,7 +244,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                         }
                     };
                     // 启动定时器
-                    timer.scheduleAtFixedRate(task, 2000,2000);
+                    timer.scheduleAtFixedRate(task, 2200,2000);
                     BnsUtils.logPrint(logTextArea,"开始运行");
                 } catch (Exception ex) {
                     run=false;
@@ -362,25 +362,38 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
 
     @Override
     public void run() {
-            BnsUtils.logPrint(logTextArea,"运行中");
-            if (comparePoint(buttonMap.get("xueYin"))) {
-                executeKeyAndTime(KeyEvent.VK_RIGHT,500);
-                BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
+        BnsUtils.logPrint(logTextArea,"运行中");
+        if (comparePoint(buttonMap.get("xueYin"))) {
+            BnsUtils.logPrint(logTextArea,"龙出了 开始转圈圈直到锁定龙");
+            int i=0;
+            while (true){
+                BnsUtils.logPrint(logTextArea,"转圈中");
+                executeKeyAndTime(KeyEvent.VK_RIGHT,250);
+                robot.delay(100);
+                i++;
+                if (comparePoint(buttonMap.get("xueXian"))) {
+                    break;
+                }
+                if (i>10) {
+                    BnsUtils.logPrint(logTextArea,"转圈10秒了");
+                    break;
+                }
             }
-            if (comparePoint(buttonMap.get("xueXian"))) {
-                BnsUtils.logPrint(logTextArea,"锁定龙了");
-                attack();
-                pick();
-                chooseLine();
-                chooseLine();
-            }
-            Rectangle area = new Rectangle(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY(), 15, 20); // 指定区域的坐标和大小
-            BufferedImage nowLine = robot.createScreenCapture(area);
-             boolean containsImage = BnsUtils.matchImage(nowLine, beginLine,0.9);//百分90模糊匹配判断是否在2线
-            if(kill!=1&&!containsImage){
-                qieXian("1xian");
-                kill=0;
-            }
+        }
+        if (comparePoint(buttonMap.get("xueXian"))) {
+            BnsUtils.logPrint(logTextArea,"锁定龙了");
+            attack();
+            pick();
+            chooseLine();
+            chooseLine();
+        }
+        Rectangle area = new Rectangle(buttonMap.get("pindao").getX(), buttonMap.get("pindao").getY(), 15, 20); // 指定区域的坐标和大小
+        BufferedImage nowLine = robot.createScreenCapture(area);
+         boolean containsImage = BnsUtils.matchImage(nowLine, beginLine,0.9);//百分90模糊匹配判断是否在2线
+        if(kill!=0&&kill!=1&&!containsImage){
+            qieXian("1xian");
+            kill=0;
+        }
     }
 
     private void chooseLine() {
@@ -436,11 +449,12 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
     private void pick() {
         BnsUtils.logPrint(logTextArea,"保存击杀后箭头方向");
         int isPick = 0;
+        Rectangle area = new Rectangle(buttonMap.get("jiantou").getX(), buttonMap.get("jiantou").getY(), 40, 40); // 指定区域的坐标和大小
+        BufferedImage oldshot = robot.createScreenCapture(area);
+        BnsUtils.saveBufferedImage(oldshot,"jpg","oldshot.jpg");
         while (isPick < 1) {
-            Rectangle area = new Rectangle(buttonMap.get("jiantou").getX(), buttonMap.get("jiantou").getY(), 20, 20); // 指定区域的坐标和大小
-            BufferedImage oldshot = robot.createScreenCapture(area);
             BnsUtils.logPrint(logTextArea,"开始第"+(isPick+1)+"寻找箱子");
-            robot.delay(500);
+            robot.delay(1500);
             if (comparePoint(buttonMap.get("shiQu"))) {
                 BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
                 robot.delay(1000);
@@ -448,13 +462,17 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
                 return;
             }
+            //默认箱子在前方 所以取消转圈逻辑
             BnsUtils.logPrint(logTextArea,"不在脸上，左转圈寻找");
             executeKeyAndTime(KeyEvent.VK_LEFT, 1500);
             BnsUtils.logPrint(logTextArea,"左转1.5秒");
             robot.delay(500);
             BnsUtils.logPrint(logTextArea,"获取当前箭头方向");
             BufferedImage newshot= robot.createScreenCapture(area);
+            BnsUtils.saveBufferedImage(newshot,"jpg","newshot.jpg");
+
             while (BnsUtils.calculateSimilarity(newshot, oldshot)<0.9&&run) {
+                robot.delay(500);
                 if (comparePoint(buttonMap.get("shiQu"))) {
                     BnsUtils.logPrint(logTextArea,"找到箱子了，捡起来");
                     executeKeyAndTime(KeyEvent.VK_F, 500);//拾取
@@ -475,7 +493,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
                 }
                 BnsUtils.logPrint(logTextArea,"第"+(isPick+1)+"次转圈继续按左转键");
                 executeKeyAndTime(KeyEvent.VK_LEFT, 1000);
-//                robot.delay(500);
+                robot.delay(500);
                 newshot= robot.createScreenCapture(area);
 
             }
@@ -520,7 +538,7 @@ public class MainGui extends JFrame  implements ActionListener, KeyListener,Runn
         Integer diffR = BnsUtils.diff(pojo.getR(), pixel.getRed());
         Integer diffG = BnsUtils.diff(pojo.getG(), pixel.getGreen());
         Integer diffB = BnsUtils.diff(pojo.getB(), pixel.getBlue());
-        if ((diffR + diffG + diffB) < 100&&run) {
+        if ((diffR + diffG + diffB) < 90&&run) {
             BnsUtils.logPrint(logTextArea,"匹配到：" + pojo.getButton().getText());
             return true;
         } else {
